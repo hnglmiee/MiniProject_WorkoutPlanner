@@ -13,6 +13,11 @@ public enum ErrorCode {
     USER_NOT_FOUND(1004, "User not found"),
 
     // ==============================
+    // USER ERRORS (1xxx)
+    // ==============================
+    WORKOUT_PLAN_NOT_EXISTED(3001, "Workout Plan not existed"),
+
+    // ==============================
     // AUTHENTICATION ERRORS (1xxx)
     // ==============================
     UNAUTHENTICATED(2001, "Unauthenticated"),
