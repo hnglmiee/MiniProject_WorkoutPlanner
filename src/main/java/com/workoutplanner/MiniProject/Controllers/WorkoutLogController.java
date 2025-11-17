@@ -1,12 +1,14 @@
 package com.workoutplanner.MiniProject.Controllers;
 
 import com.workoutplanner.MiniProject.Constants.ApiPaths;
+import com.workoutplanner.MiniProject.Payload.Request.WorkoutLogRequest;
+import com.workoutplanner.MiniProject.Payload.Request.WorkoutPlanRequest;
 import com.workoutplanner.MiniProject.Payload.Response.ApiResponse;
 import com.workoutplanner.MiniProject.Payload.Response.WorkoutLogResponse;
+import com.workoutplanner.MiniProject.Payload.Response.WorkoutPlanResponse;
 import com.workoutplanner.MiniProject.Services.Interfaces.IWorkoutLogService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -32,6 +34,14 @@ public class WorkoutLogController {
         ApiResponse<List<WorkoutLogResponse>> apiResponse = new ApiResponse<>();
         apiResponse.setResult(workoutLogService.getMyWorkoutLog());
         apiResponse.setMessage("Get data successfully!");
+        return apiResponse;
+    }
+
+    @PostMapping()
+    public ApiResponse<WorkoutLogResponse> createWorkoutLog(@RequestBody @Valid WorkoutLogRequest request) {
+        ApiResponse<WorkoutLogResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(workoutLogService.createWorkoutLog(request));
+        apiResponse.setMessage("Create data successfully!");
         return apiResponse;
     }
 }

@@ -12,12 +12,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.bind.annotation.CrossOrigin;
+
 import java.util.Collections;
 
 
 // Cau hinh Spring Security
 @Configuration
 @EnableWebSecurity
+@CrossOrigin(origins = "http://localhost:5173")
 public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth", "/api/v1/workout-plans", "/api/v1/auth/logout", "/api/v1/auth/introspect", "/api/v1/auth/refresh"};

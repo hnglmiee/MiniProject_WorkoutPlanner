@@ -24,10 +24,15 @@ public enum ErrorCode {
     FORBIDDEN(3002, "You don't have permission to this plan"),
 
     // ==============================
-    // WORKOUT_PLAN_ERROR (4xxx)
+    // WORKOUT_SCHEDULE_ERROR (4xxx)
     // ==============================
     WORKOUT_SCHEDULE_NOT_EXISTED(4001, "Workout Schedule not existed"),
     WORKOUT_SCHEDULE_FORBIDDEN(3002, "You don't have permission to this schedule"),
+
+    // ==============================
+    // WORKOUT_SCHEDULE_ERROR (5xxx)
+    // ==============================
+    EXERCISE_NOT_EXISTED(4001, "Exercise not existed"),
 
     // ==============================
     // SYSTEM ERRORS (9xxx)
