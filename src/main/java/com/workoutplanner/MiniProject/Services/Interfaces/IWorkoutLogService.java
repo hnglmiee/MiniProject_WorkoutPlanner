@@ -10,4 +10,6 @@ public interface IWorkoutLogService {
     List<WorkoutLogResponse> getAllWorkoutLog();
     List<WorkoutLogResponse> getMyWorkoutLog();
     WorkoutLogResponse createWorkoutLog(WorkoutLogRequest request);
+    WorkoutLogResponse updateWorkoutLog(Integer id, WorkoutLogRequest request);
+    boolean deleteWorkoutLog(Integer id);
 }

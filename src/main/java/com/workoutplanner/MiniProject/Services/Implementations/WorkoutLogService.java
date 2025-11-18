@@ -117,4 +117,63 @@ public class WorkoutLogService implements IWorkoutLogService {
         response.setLoggedAt(workoutLog.getLoggedAt());
         return response;
     }
+
+    @Override
+    public WorkoutLogResponse updateWorkoutLog(Integer id, WorkoutLogRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        WorkoutSchedule workoutSchedule = workoutScheduleRepository.findById(request.getScheduleId()).orElseThrow(() -> new AppException(ErrorCode.WORKOUT_SCHEDULE_NOT_EXISTED));
+
+        WorkoutLog workoutLog = workoutLogRepository.getWorkoutLogById(id).orElseThrow(() -> new AppException(ErrorCode.WORKOUT_LOG_NOT_EXITSED));
+
+        if(!workoutSchedule.getPlan().getUser().getId().equals(user.getId())) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        Exercise exercise = exerciseRepository.findById(request.getExerciseId()).orElseThrow(() -> new AppException(ErrorCode.EXERCISE_NOT_EXISTED));
+
+        if(request.getExerciseId() != null) {
+            workoutLog.setExercise(exercise);
+        } if(request.getScheduleId() != null) {
+            workoutLog.setSchedule(workoutSchedule);
+        } if(request.getActualSets() != null) {
+            workoutLog.setActualSets(request.getActualSets());
+        } if(request.getActualReps() != null) {
+            workoutLog.setActualReps(request.getActualReps());
+        } if(request.getActualWeight() != null) {
+            workoutLog.setActualWeight(request.getActualWeight());
+        } if(request.getNotes() != null) {
+            workoutLog.setNotes(request.getNotes());
+        }
+        workoutLogRepository.save(workoutLog);
+
+        WorkoutLogResponse response = new WorkoutLogResponse();
+        response.setScheduleId(workoutLog.getSchedule().getId());
+        response.setExerciseName(workoutLog.getExercise().getName());
+        response.setActualSets(workoutLog.getActualSets());
+        response.setActualReps(workoutLog.getActualReps());
+        response.setActualWeight(workoutLog.getActualWeight());
+        response.setNotes(workoutLog.getNotes());
+        response.setLoggedAt(workoutLog.getLoggedAt());
+        return response;
+    }
+
+    @Override
+    public boolean deleteWorkoutLog(Integer id) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        WorkoutLog workoutLog = workoutLogRepository.getWorkoutLogById(id).orElseThrow(() -> new AppException(ErrorCode.WORKOUT_LOG_NOT_EXITSED));
+
+        Integer ownerId = workoutLog.getSchedule().getPlan().getUser().getId();
+
+        if(!ownerId.equals(user.getId())) {
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
+        workoutLogRepository.delete(workoutLog);
+        return true;
+    }
 }

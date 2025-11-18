@@ -44,4 +44,21 @@ public class WorkoutLogController {
         apiResponse.setMessage("Create data successfully!");
         return apiResponse;
     }
+
+    @PutMapping("/{id}")
+    public ApiResponse<WorkoutLogResponse> updateWorkoutLog(@PathVariable Integer id, @RequestBody @Valid WorkoutLogRequest request) {
+        ApiResponse<WorkoutLogResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(workoutLogService.updateWorkoutLog(id, request));
+        apiResponse.setMessage("Update data successfully!");
+        return apiResponse;
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<Boolean> deleteWorkoutLog(@PathVariable Integer id) {
+        workoutLogService.deleteWorkoutLog(id);
+        ApiResponse<Boolean> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(Boolean.TRUE);
+        apiResponse.setMessage("Delete data successfully!");
+        return apiResponse;
+    }
 }
