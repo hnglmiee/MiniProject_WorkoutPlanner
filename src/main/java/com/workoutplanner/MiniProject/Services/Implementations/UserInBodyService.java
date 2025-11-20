@@ -4,6 +4,7 @@ import com.workoutplanner.MiniProject.Exception.AppException;
 import com.workoutplanner.MiniProject.Exception.ErrorCode;
 import com.workoutplanner.MiniProject.Models.User;
 import com.workoutplanner.MiniProject.Models.UserInbody;
+import com.workoutplanner.MiniProject.Payload.Request.UserInBodyRequest;
 import com.workoutplanner.MiniProject.Payload.Response.UserInbodyResponse;
 import com.workoutplanner.MiniProject.Repositories.UserInbodyRepository;
 import com.workoutplanner.MiniProject.Repositories.UserRepository;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -156,5 +158,59 @@ public class UserInBodyService implements IUserInBodyService {
         }
 
         return userInbodyResponses;
+    }
+
+    @Override
+    public UserInbodyResponse createUserInBody(UserInBodyRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        int age = calculateAge(user.getBirthday());
+        String gender = user.getGender();
+
+        // Tính số buổi tập trong tuần trước
+        LocalDate measuredDate = request.getMeasuredAt().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate oneWeekAgo = measuredDate.minusDays(7);
+        int frequencyPerWeek = workoutScheduleRepository.countByUserIdInLastWeek(user.getId(), oneWeekAgo);
+
+        // Tính BodyFat và MuscleMass
+        BigDecimal bodyFat = calculateBodyFatPercentage(request.getWeight(), request.getHeight(), age, gender, frequencyPerWeek);
+        BigDecimal muscleMass = calculateMuscleMass(request.getWeight(), bodyFat, frequencyPerWeek);
+
+        // Tính BMI và LBM
+        double height = request.getHeight().doubleValue() / 100.0;
+        double weight = request.getWeight().doubleValue();
+        BigDecimal bmi = BigDecimal.valueOf(weight / (height * height)).setScale(2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal leanBodyMass = BigDecimal.valueOf(weight * (1 - bodyFat.doubleValue() / 100)).setScale(2, BigDecimal.ROUND_HALF_UP);
+
+        // DTO request -> Entity
+        UserInbody userInbody = new UserInbody();
+        userInbody.setUser(user);
+        userInbody.setAge(age);
+        userInbody.setWeight(request.getWeight());
+        userInbody.setHeight(request.getHeight());
+        userInbody.setMeasuredAt(request.getMeasuredAt());
+        userInbody.setNotes(request.getNotes());
+        userInbody.setBodyFatPercentage(bodyFat);
+        userInbody.setMuscleMass(muscleMass);
+
+        userInbodyRepository.save(userInbody);
+
+        // Entity -> DTO response
+        UserInbodyResponse response = new UserInbodyResponse();
+        response.setId(userInbody.getId());
+        response.setFullName(user.getFullName());
+        response.setMeasuredAt(request.getMeasuredAt());
+        response.setHeight(request.getHeight());
+        response.setWeight(request.getWeight());
+        response.setBodyFatPercentage(bodyFat);
+        response.setMuscleMass(muscleMass);
+        response.setBmi(bmi);
+        response.setLeanBodyMass(leanBodyMass);
+        response.setNotes(request.getNotes());
+        response.setBodyFatTrend("stable");
+        response.setMuscleMassTrend("stable");
+
+        return response;
     }
 }
