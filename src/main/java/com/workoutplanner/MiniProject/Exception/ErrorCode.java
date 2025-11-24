@@ -40,6 +40,16 @@ public enum ErrorCode {
     WORKOUT_LOG_NOT_EXITSED(6001, "Workout log not existed"),
 
     // ==============================
+    // USER_GOAL_ERROR (7xxx)
+    // ==============================
+    GOAL_NOT_EXISTED(7001, "Goal not existed"),
+
+    // ==============================
+    // USER_INBODY_ERROR (7xxx)
+    // ==============================
+    USER_INBODY_NOT_FOUND(7001, "InBody not existed"),
+
+    // ==============================
     // SYSTEM ERRORS (9xxx)
     // ==============================
     UNCATEGORIZED(9999, "Uncategorized error"),

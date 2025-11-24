@@ -42,4 +42,9 @@ public class ApiPaths {
     public static final class UserInBody {
         public static final String ROOT = BASE_PATH + "/user-in-body";
     }
+
+    // USER GOAL ENDPOINTS
+    public static final class UserGoal {
+        public static final String ROOT = BASE_PATH + "/goal";
+    }
 }
