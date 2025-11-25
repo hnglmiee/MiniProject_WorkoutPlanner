@@ -34,58 +34,102 @@ public class UserGoalService implements IUserGoalService {
 
     @Override
     public UserGoalResponse checkGoalProgress() {
+//        Lấy user hiện taại
+        User user = getCurrentUser();
+
+//        Lấy goal đang ACTIVE của user
+        UserGoal goal = getActiveGoal(user);
+
+//        Lấy bản inbody gần nhất
+        UserInbody lastestInBody = getLastestInBody(user);
+
+//        Đếm số buổi tập trong 7 ngày
+        int loggedSession = countWorkoutSession(user);
+
+//        Kiểm tra tiến độ
+//        workoutOnTrack: đủ số buổi trong tuần
+        boolean workoutOnTrack = evaluateWorkoutProgress(goal, loggedSession);
+//        inBodyOnTrack: trọng lượng, bodyfat, muscle mass đạt yêu cầu
+        boolean inBodyOntrack = evaluateInBodyProgress(goal, lastestInBody);
+
+        UserGoalResponse response = buildResponse(goal, lastestInBody, loggedSession, workoutOnTrack, inBodyOntrack);
+
+        // Kiểm tra hoàn thành mục tiêu
+        if(goalFinished(goal, lastestInBody)) {
+            response.setStatus("COMPLETED");
+            userGoalRepository.save(goal);
+            response.setStatus("COMPLETED");
+        }
+        return response;
+    }
+
+//    Lấy user đang đăng nhập
+    private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        return userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
 
+//    Lấy goal ACTIVE mới nhất
+    private UserGoal getActiveGoal(User user) {
         // Query tất cả goals của user có status "ACTIVE và .findFirst() → lấy goal đầu tiên
-        UserGoal goal = userGoalRepository.findTopByUserAndStatusOrderByStartDateDesc(user, "ACTIVE")
+        return userGoalRepository.findTopByUserAndStatusOrderByStartDateDesc(user, "ACTIVE")
                 .orElseThrow(() -> new AppException(ErrorCode.GOAL_NOT_EXISTED));
+    }
 
-        UserGoalResponse response = new UserGoalResponse();
+    private UserInbody getLastestInBody(User user) {
+        // Check InBody Progress
+        // Lấy bản ghi InBody mới nhất (ORDER BY measuredAt DESC)
+        return userInbodyRepository.findTopByUserOrderByMeasuredAtDesc(user).orElseThrow(() -> new AppException(ErrorCode.USER_INBODY_NOT_FOUND));
+    }
 
+    private int countWorkoutSession(User user) {
         // Kiểm tra số buổi tập trong 7 ngày
         // weekStart = thời điểm 7 ngày trước
         Instant weekStart = Instant.now().minus(7, ChronoUnit.DAYS);
-        // now = hiện tại
-        Instant now = Instant.now();
-
+        // Query số buổi tập trong khoảng đó.
         // Repository sẽ count số buổi tập DISTINCT theo thời gian loggedAt.
-        int loggedSession = workoutLogRepository.countWorkoutSessionInRange(user, weekStart, now);
+        return workoutLogRepository.countWorkoutSessionInRange(user, weekStart, Instant.now());
+    }
 
+    private boolean evaluateWorkoutProgress(UserGoal goal, int loggedSessions) {
         // Lấy target session từ goal
         Integer targetSessions = goal.getTargetWorkoutSessionsPerWeek();
 
-        // Nếu người dùng tập ít hơn số buổi mục tiêu → workoutOnTrack = false.
-        boolean workoutOnTrack = true;
-        if(targetSessions != null && loggedSession < targetSessions) {
-            workoutOnTrack = false;
-        }
+        // Nếu người dùng tập ít hơn target → workoutOnTrack = false.
+        return targetSessions == null || targetSessions >= loggedSessions;
+    }
 
-        // Check InBody Progress
-        // Lấy bản ghi InBody mới nhất (ORDER BY measuredAt DESC)
-        UserInbody lastestInBody = userInbodyRepository.findTopByUserOrderByMeasuredAtDesc(user).orElseThrow(() -> new AppException(ErrorCode.USER_INBODY_NOT_FOUND));
+    private boolean evaluateInBodyProgress(UserGoal goal, UserInbody inBody) {
+        if (inBody == null) return false;
+        if (isOverWeight(goal, inBody)) return false;
+        if (isOverBodyFat(goal, inBody)) return false;
+        if (isBelowMuscleMass(goal, inBody)) return false;
+        return true;
+    }
 
-        // Mặc định InBody ban đầu on track
-        boolean inBodyOntrack = true;
+    private boolean isOverWeight(UserGoal goal, UserInbody inBody) {
+        return goal.getTargetWeight() != null &&
+                inBody.getWeight() != null && inBody.getWeight().compareTo(goal.getTargetWeight()) > 0;
+    }
 
-        if(lastestInBody != null) {
-            // Nếu weight hiện tại > target weight → fail.
-            if(goal.getTargetWeight() != null && lastestInBody.getWeight() != null && lastestInBody.getWeight().compareTo(goal.getTargetWeight()) > 0) {
-                inBodyOntrack = false;
-            }
+    private boolean isOverBodyFat(UserGoal goal, UserInbody inBody) {
+        return goal.getTargetBodyFatPercentage() != null &&
+                inBody.getBodyFatPercentage() != null && inBody.getBodyFatPercentage().compareTo(goal.getTargetBodyFatPercentage()) > 0;
+    }
 
-            if(goal.getTargetBodyFatPercentage() != null &&
-                    // Nếu body fat hiện tại > target body fat → fail.
-                    lastestInBody.getBodyFatPercentage() != null &&
-                    lastestInBody.getBodyFatPercentage().compareTo(goal.getTargetBodyFatPercentage()) > 0) {
-                inBodyOntrack = false;
-            }
+    private boolean isBelowMuscleMass(UserGoal goal, UserInbody inBody) {
+        return goal.getTargetMuscleMass() != null &&
+                inBody.getMuscleMass() != null && inBody.getMuscleMass().compareTo(goal.getTargetMuscleMass()) > 0;
+    }
 
-            if(goal.getTargetMuscleMass() != null && lastestInBody.getMuscleMass() != null && lastestInBody.getMuscleMass().compareTo(goal.getTargetMuscleMass()) < 0) {
-                // Nếu muscle mass hiện tại < mục tiêu → fail.
-                inBodyOntrack = false;
-            }
-        }
+    // Kiểm tra hoàn thành mục tiêu
+    private boolean goalFinished(UserGoal goal, UserInbody inbody) {
+        if (inbody == null) return false;
+        return !isOverWeight(goal, inbody) && !isOverBodyFat(goal, inbody) && !isBelowMuscleMass(goal, inbody);
+    }
+
+    private UserGoalResponse buildResponse(UserGoal goal, UserInbody lastestInBody, int loggedSessions, boolean workoutOnTrack, boolean inBodyOntrack) {
+        UserGoalResponse response = new UserGoalResponse();
 
         // Tổng hợp trạng thái tiến độ
         // Nếu cả việc tập + số đo InBody ok → "ON_TRACK"
@@ -96,37 +140,9 @@ public class UserGoalService implements IUserGoalService {
             response.setStatus("BEHIND");
         }
 
-        response.setWorkoutSessionThisWeek(loggedSession);
-        response.setLastestInBody(lastestInBody);
         response.setGoal(goal);
-
-        // Kiểm tra xem đã đạt mục tiêu chưa
-        if(goalFinished(goal, lastestInBody)) {
-            response.setStatus("COMPLETED");
-            userGoalRepository.save(goal);
-            response.setStatus("COMPLETED");
-        }
+        response.setLastestInBody(lastestInBody);
+        response.setWorkoutSessionThisWeek(loggedSessions);
         return response;
-    }
-
-    // Kiểm tra hoàn thành mục tiêu
-    private boolean goalFinished(UserGoal goal, UserInbody inbody) {
-        if (inbody == null) return false;
-
-        boolean finished = true;
-        if (goal.getTargetWeight() != null &&
-                inbody.getWeight().compareTo(goal.getTargetWeight()) > 0) {
-            finished = false;
-        }
-        if (goal.getTargetBodyFatPercentage() != null &&
-                inbody.getBodyFatPercentage().compareTo(goal.getTargetBodyFatPercentage()) > 0) {
-            finished = false;
-        }
-        if (goal.getTargetMuscleMass() != null &&
-                inbody.getMuscleMass().compareTo(goal.getTargetMuscleMass()) < 0) {
-            finished = false;
-        }
-
-        return finished;
     }
 }
