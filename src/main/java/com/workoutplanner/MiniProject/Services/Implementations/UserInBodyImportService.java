@@ -9,7 +9,6 @@ import com.workoutplanner.MiniProject.Repositories.UserInbodyRepository;
 import com.workoutplanner.MiniProject.Repositories.UserRepository;
 import net.sourceforge.tess4j.TesseractException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +27,7 @@ public class UserInBodyImportService {
 
     @Autowired
     // OCR từng ảnh.
+    // Lấy text từ ảnh
     private OcrService ocrService;
 
     @Autowired
@@ -98,6 +98,57 @@ public class UserInBodyImportService {
 
         // 6) Return
         return parsed;
+    }
+
+    public InBodyExtractResponse importFromImage(MultipartFile file) throws IOException, TesseractException {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // 1) Convert MultipartFile -> BufferedImage
+        BufferedImage image = javax.imageio.ImageIO.read(file.getInputStream());
+        if(image == null) {
+            throw new IllegalArgumentException("Invalid image format");
+        }
+
+        // 2) OCR ảnh
+        String rawText = ocrService.doOcr(image);
+
+        // 3) Parse bằng regex
+        InBodyExtractResponse parsed = new InBodyExtractResponse();
+        Integer age = parserService.extractIntFirstMatch(rawText,"(\\d{1,3})\\s+(Female|Male)");
+        Double heightVal = parserService.extractDoubleFirstMatch(rawText,"([0-9]{2,3}\\.[0-9]+)\\s*cm");
+        Double weightVal = parserService.extractDoubleFirstMatch(rawText,"Weight\\s*\\(kg\\)\\s*([0-9]{1,3}(?:\\.[0-9]+)?)");
+        Double bodyFatVal = parserService.extractDoubleFirstMatch(rawText,"(PBF|Percent Body Fat)[^0-9]*([0-9]{1,3}(?:\\\\.[0-9]+)?)");
+        Double muscleVal = parserService.extractDoubleFirstMatch(rawText,"SMM[^0-9]+([0-9]{1,3}(?:\\\\.[0-9]+)?)\n");
+
+        parsed.setAge(age);
+        parsed.setHeight(heightVal == null ? null : new BigDecimal(heightVal.toString()));
+        parsed.setWeight(weightVal == null ? null : new BigDecimal(weightVal.toString()));
+        parsed.setBodyFatPercentage(bodyFatVal == null ? null : new BigDecimal(bodyFatVal.toString()));
+        parsed.setMuscleMass(muscleVal == null ? null : new BigDecimal(muscleVal.toString()));
+        parsed.setMeasuredAt(Instant.now());
+
+        System.out.println("=== RAW TEXT OCR ===");
+        System.out.println(rawText);
+        System.out.println("====================");
+
+
+        // 4) Map vào entity
+        UserInbody inbody = new UserInbody();
+        inbody.setUser(user);
+        inbody.setAge(parsed.getAge());
+        inbody.setMeasuredAt(parsed.getMeasuredAt());
+        inbody.setHeight(parsed.getHeight());
+        inbody.setWeight(parsed.getWeight());
+        inbody.setBodyFatPercentage(parsed.getBodyFatPercentage());
+        inbody.setMuscleMass(parsed.getMuscleMass());
+        inbody.setNotes("Imported from Image; rawText length=" + rawText.length());
+
+        // 5) Save DB
+        UserInbody saved = userInbodyRepository.save(inbody);
+        parsed.setId(saved.getId());
+        return parsed;
+
     }
 
 }

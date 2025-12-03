@@ -64,4 +64,38 @@ public class UserInBodyImportController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
         }
     }
+
+    @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<InBodyExtractResponse>> uploadInbodyImage(@RequestPart("file") MultipartFile file) {
+        ApiResponse<InBodyExtractResponse> apiResponse = new ApiResponse<>();
+        if (file == null || file.isEmpty()) {
+            apiResponse.setMessage("File is required!");
+            apiResponse.setResult(null);
+            apiResponse.setCode(400);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiResponse);
+        }
+
+        String contentType = file.getContentType();
+        if(contentType == null || contentType.equals("/image/png") || contentType.equals("/image/jpeg") || contentType.equals("/image/jpg")) {
+            apiResponse.setMessage("Only PNG/JPG/JPEG images are allowed");
+        }
+
+        try {
+            InBodyExtractResponse response = importService.importFromImage(file);
+            apiResponse.setResult(response);
+            apiResponse.setMessage("Upload & OCR successfully!");
+            apiResponse.setCode(200);
+            return ResponseEntity.ok(apiResponse);
+        } catch (TesseractException e) {
+            apiResponse.setMessage("Unexpected error: " + e.getMessage());
+            apiResponse.setResult(null);
+            apiResponse.setCode(500);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
+        } catch (IOException e) {
+            apiResponse.setMessage("Unexpected error: " + e.getMessage());
+            apiResponse.setResult(null);
+            apiResponse.setCode(500);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
+        }
+    }
 }

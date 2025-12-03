@@ -34,7 +34,7 @@ public class UserGoalService implements IUserGoalService {
 
     @Override
     public UserGoalResponse checkGoalProgress() {
-//        Lấy user hiện taại
+//        Lấy user hiện tai
         User user = getCurrentUser();
 
 //        Lấy goal đang ACTIVE của user
