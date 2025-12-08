@@ -2,11 +2,9 @@ package com.workoutplanner.MiniProject.Controllers;
 
 import com.workoutplanner.MiniProject.Constants.ApiPaths;
 import com.workoutplanner.MiniProject.Payload.Request.UserInBodyUpdateRequest;
-import com.workoutplanner.MiniProject.Payload.Request.WorkoutLogRequest;
 import com.workoutplanner.MiniProject.Payload.Response.ApiResponse;
 import com.workoutplanner.MiniProject.Payload.Response.UserInBodyUpdateResponse;
 import com.workoutplanner.MiniProject.Payload.Response.UserInbodyResponse;
-import com.workoutplanner.MiniProject.Payload.Response.WorkoutLogResponse;
 import com.workoutplanner.MiniProject.Services.Interfaces.IUserInBodyService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;

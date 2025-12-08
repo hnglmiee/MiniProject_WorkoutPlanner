@@ -13,8 +13,10 @@ import java.awt.image.BufferedImage;
 
 @Service
 public class OcrService {
+    // PDF
     @Autowired
     private Tesseract tesseract;
+
     // Convert BufferedImage → file tạm
     // Nhận 1 ảnh BufferedImage.
     public String doOcr(BufferedImage image) throws TesseractException {
