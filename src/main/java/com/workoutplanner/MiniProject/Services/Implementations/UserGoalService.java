@@ -151,6 +151,7 @@ public class UserGoalService implements IUserGoalService {
         if(!goal.getUser().getId().equals(user.getId())) {
             throw new AppException(ErrorCode.GOAL_NOT_EXISTED);
         }
+
         userGoalRepository.delete(goal);
         return true;
     }
