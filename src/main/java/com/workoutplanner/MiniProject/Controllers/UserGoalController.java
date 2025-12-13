@@ -40,4 +40,12 @@ public class UserGoalController {
         apiResponse.setMessage("Update data successfully!");
         return apiResponse;
     }
+    @DeleteMapping("/{id}")
+    public ApiResponse<Boolean> deleteUserGoal(@PathVariable Integer id) {
+        userGoalService.deleteUserGoal(id);
+        ApiResponse<Boolean> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(Boolean.TRUE);
+        apiResponse.setMessage("Delete data successfully!");
+        return apiResponse;
+    }
 }

@@ -8,4 +8,5 @@ public interface IUserGoalService {
     UserGoalResponse checkGoalProgress();
     UserGoalCreateResponse createUserGoal(UserGoalRequest request);
     UserGoalCreateResponse updateUserGoal(Integer id, UserGoalRequest request);
+    boolean deleteUserGoal(Integer id);
 }

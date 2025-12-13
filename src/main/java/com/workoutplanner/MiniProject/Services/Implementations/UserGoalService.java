@@ -144,6 +144,17 @@ public class UserGoalService implements IUserGoalService {
         return response;
     }
 
+    @Override
+    public boolean deleteUserGoal(Integer id) {
+        User user = getCurrentUser();
+        UserGoal goal = userGoalRepository.getUserGoalById(id).orElseThrow(() -> new AppException(ErrorCode.GOAL_NOT_EXISTED));
+        if(!goal.getUser().getId().equals(user.getId())) {
+            throw new AppException(ErrorCode.GOAL_NOT_EXISTED);
+        }
+        userGoalRepository.delete(goal);
+        return true;
+    }
+
     //    Lấy user đang đăng nhập
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
