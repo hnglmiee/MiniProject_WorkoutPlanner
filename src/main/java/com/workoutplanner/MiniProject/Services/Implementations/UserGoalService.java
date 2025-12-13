@@ -98,6 +98,52 @@ public class UserGoalService implements IUserGoalService {
         return response;
     }
 
+    @Override
+    public UserGoalCreateResponse updateUserGoal(Integer id, UserGoalRequest request) {
+        User user = getCurrentUser();
+        UserGoal goal = userGoalRepository.getUserGoalById(id).orElseThrow(() -> new AppException(ErrorCode.GOAL_NOT_EXISTED));
+
+        if(!goal.getUser().getId().equals(user.getId())) {
+            throw new AppException(ErrorCode.GOAL_NOT_EXISTED);
+        }
+
+        if(request.getGoalName() != null) {
+            goal.setGoalName(request.getGoalName());
+        } if(request.getTargetWeight() != null) {
+            goal.setTargetWeight(request.getTargetWeight());
+        } if(request.getTargetBodyFatPercentage() != null) {
+            goal.setTargetBodyFatPercentage(request.getTargetBodyFatPercentage());
+        } if(request.getTargetMuscleMass() != null) {
+            goal.setTargetMuscleMass(request.getTargetMuscleMass());
+        } if(request.getTargetWorkoutSessionsPerWeek() != null) {
+            goal.setTargetWorkoutSessionsPerWeek(request.getTargetWorkoutSessionsPerWeek());
+        } if(request.getTargetCaloriesPerDay() != null) {
+            goal.setTargetCaloriesPerDay(request.getTargetCaloriesPerDay());
+        } if(request.getStartDate() != null) {
+            goal.setStartDate(request.getStartDate());
+        } if(request.getEndDate() != null) {
+            goal.setEndDate(request.getEndDate());
+        } if(request.getNotes() != null) {
+            goal.setNotes(request.getNotes());
+        } if(request.getStatus() != null) {
+            goal.setStatus(request.getStatus());
+        }
+        userGoalRepository.save(goal);
+
+        UserGoalCreateResponse response = new UserGoalCreateResponse();
+        response.setGoalName(goal.getGoalName());
+        response.setTargetWeight(goal.getTargetWeight());
+        response.setTargetBodyFatPercentage(goal.getTargetBodyFatPercentage());
+        response.setTargetMuscleMass(goal.getTargetMuscleMass());
+        response.setTargetWorkoutSessionsPerWeek(goal.getTargetWorkoutSessionsPerWeek());
+        response.setTargetCaloriesPerDay(goal.getTargetCaloriesPerDay());
+        response.setStartDate(goal.getStartDate());
+        response.setEndDate(goal.getEndDate());
+        response.setNotes(goal.getNotes());
+        response.setStatus(goal.getStatus());
+        return response;
+    }
+
     //    Lấy user đang đăng nhập
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();

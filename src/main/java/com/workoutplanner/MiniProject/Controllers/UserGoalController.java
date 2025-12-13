@@ -29,7 +29,15 @@ public class UserGoalController {
     public ApiResponse<UserGoalCreateResponse> createUserGoal(@RequestBody @Valid UserGoalRequest request) {
         ApiResponse<UserGoalCreateResponse> apiResponse = new ApiResponse<>();
         apiResponse.setResult(userGoalService.createUserGoal(request));
-        apiResponse.setMessage("Get data successfully!");
+        apiResponse.setMessage("Create data successfully!");
+        return apiResponse;
+    }
+
+    @PutMapping("/{id}")
+    public ApiResponse<UserGoalCreateResponse> updateUserGoal(@PathVariable Integer id, @RequestBody @Valid UserGoalRequest request) {
+        ApiResponse<UserGoalCreateResponse> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(userGoalService.updateUserGoal(id, request));
+        apiResponse.setMessage("Update data successfully!");
         return apiResponse;
     }
 }
