@@ -1,7 +1,12 @@
 version: '3.8'
 services:
   mysql:
-    build: .
+    # Thay build bằng image từ Docker Hub
+    image: lamiee/workoutplanner-mysql:latest
+
+    # Nếu muốn build local, uncomment 2 dòng dưới và comment dòng image ở trên
+    # build: .
+
     container_name: workoutplanner
     restart: always
     environment:
@@ -13,6 +18,13 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      # Vẫn giữ schema.sql để có thể init lại nếu cần
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   mysql_data:
