@@ -27,4 +27,12 @@ public class WorkoutExerciseController {
         apiResponse.setMessage("Get data successfully!");
         return apiResponse;
     }
+
+    @GetMapping("/my-workout-exercise")
+    public ApiResponse<List<WorkoutExerciseResponse>> getMyWorkoutExercises() {
+        ApiResponse<List<WorkoutExerciseResponse>> apiResponse = new ApiResponse<>();
+        apiResponse.setResult(workoutExerciseService.getMyWorkoutExercises());
+        apiResponse.setMessage("Get data successfully!");
+        return apiResponse;
+    }
 }
