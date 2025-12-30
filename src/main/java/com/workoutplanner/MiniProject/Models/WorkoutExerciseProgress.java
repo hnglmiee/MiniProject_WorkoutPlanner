@@ -9,8 +9,6 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 
-@Getter
-@Setter
 @Entity
 @Table(name = "WorkoutExerciseProgress", schema = "workoutplanner")
 public class WorkoutExerciseProgress {
@@ -36,4 +34,43 @@ public class WorkoutExerciseProgress {
     @Column(name = "CompletedAt")
     private Instant completedAt;
 
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public WorkoutSchedule getSchedule() {
+        return schedule;
+    }
+
+    public void setSchedule(WorkoutSchedule schedule) {
+        this.schedule = schedule;
+    }
+
+    public WorkoutExercise getWorkoutExercise() {
+        return workoutExercise;
+    }
+
+    public void setWorkoutExercise(WorkoutExercise workoutExercise) {
+        this.workoutExercise = workoutExercise;
+    }
+
+    public Boolean getCompleted() {
+        return isCompleted;
+    }
+
+    public void setCompleted(Boolean completed) {
+        isCompleted = completed;
+    }
+
+    public Instant getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(Instant completedAt) {
+        this.completedAt = completedAt;
+    }
 }

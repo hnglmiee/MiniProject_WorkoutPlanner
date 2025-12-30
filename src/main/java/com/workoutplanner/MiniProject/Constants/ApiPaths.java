@@ -49,6 +49,21 @@ public class ApiPaths {
         public static final String ROOT = BASE_PATH + "/workout-exercise";
     }
 
+    // EXERCISE ENDPOINTS
+    public static final class Exercise {
+        public static final String ROOT = BASE_PATH + "/exercise";
+    }
+
+    // EXERCISE CATEGORIES ENDPOINTS
+    public static final class ExerciseCategory {
+        public static final String ROOT = BASE_PATH + "/exercise-category";
+    }
+
+    // WORKOUT EXERCISE ENDPOINTS
+    public static final class WorkoutExerciseProgress {
+        public static final String ROOT = BASE_PATH + "/exercise-progress";
+    }
+
     // USER GOAL ENDPOINTS
     public static final class UserGoal {
         public static final String ROOT = BASE_PATH + "/goal";
